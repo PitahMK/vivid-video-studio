@@ -65,24 +65,31 @@ export const Timeline = ({ duration, currentTime, onSeek }: TimelineProps) => {
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
                 <div className="text-xs text-timeline-foreground w-12">Video</div>
-                <div className="flex-1 h-8 bg-control-bg rounded border border-border relative overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-primary/20 to-primary/10 rounded flex items-center px-2">
-                    <div className="text-xs text-foreground font-medium">Video Track</div>
+                <div 
+                  className="flex-1 h-8 bg-control-bg rounded border border-border relative overflow-hidden cursor-pointer"
+                  onClick={(e) => {
+                    if (duration > 0) {
+                      const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                      const clickX = e.clientX - rect.left;
+                      const newTime = (clickX / rect.width) * duration;
+                      onSeek(Math.max(0, Math.min(duration, newTime)));
+                    }
+                  }}
+                >
+                  <div className="absolute inset-0 pointer-events-none">
+                    <div className="h-full bg-gradient-to-r from-primary/20 to-primary/10 rounded flex items-center px-2">
+                      <div className="text-xs text-foreground font-medium">Video Track</div>
+                    </div>
                   </div>
+                  {/* Progress Fill */}
+                  <div 
+                    className="absolute top-0 left-0 h-full bg-primary/30"
+                    style={{ width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%' }}
+                  ></div>
                   {/* Playhead */}
                   <div 
-                    className="absolute top-0 w-0.5 h-full bg-primary cursor-pointer z-10"
+                    className="absolute top-0 w-0.5 h-full bg-primary z-10"
                     style={{ left: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%' }}
-                    onClick={(e) => {
-                      if (duration > 0) {
-                        const rect = e.currentTarget.parentElement?.getBoundingClientRect();
-                        if (rect) {
-                          const clickX = e.clientX - rect.left;
-                          const newTime = (clickX / rect.width) * duration;
-                          onSeek(Math.max(0, Math.min(duration, newTime)));
-                        }
-                      }
-                    }}
                   ></div>
                 </div>
               </div>

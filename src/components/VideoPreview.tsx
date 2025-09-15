@@ -7,9 +7,10 @@ interface VideoPreviewProps {
   video: File | null;
   onTimeUpdate?: (time: number) => void;
   activeEffects?: string[];
+  seekTo?: number;
 }
 
-export const VideoPreview = ({ video, onTimeUpdate, activeEffects = [] }: VideoPreviewProps) => {
+export const VideoPreview = ({ video, onTimeUpdate, activeEffects = [], seekTo }: VideoPreviewProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -49,6 +50,18 @@ export const VideoPreview = ({ video, onTimeUpdate, activeEffects = [] }: VideoP
     if (!videoRef.current) return;
     setDuration(videoRef.current.duration);
   };
+
+  // Sync external seek requests from Timeline
+  useEffect(() => {
+    if (!videoRef.current) return;
+    if (typeof seekTo === 'number' && !Number.isNaN(seekTo)) {
+      const diff = Math.abs(videoRef.current.currentTime - seekTo);
+      if (diff > 0.2) {
+        videoRef.current.currentTime = seekTo;
+        setCurrentTime(seekTo);
+      }
+    }
+  }, [seekTo]);
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!videoRef.current) return;

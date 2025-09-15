@@ -23,7 +23,7 @@ interface ControlPanelProps {
   onToggleEffect: (effectName: string) => void;
 }
 
-export const ControlPanel = ({ onExport, isProcessing, hasVideo, videoMetadata, activeEffects, onToggleEffect }: ControlPanelProps) => {
+export const ControlPanel = ({ onExport, isProcessing, hasVideo, videoMetadata, activeEffects = [], onToggleEffect }: ControlPanelProps) => {
   const effects = [
     { name: "Fade In", icon: Zap },
     { name: "Blur", icon: Filter },

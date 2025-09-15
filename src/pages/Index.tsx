@@ -78,6 +78,7 @@ const Index = () => {
               video={uploadedVideo} 
               onTimeUpdate={setCurrentTime}
               activeEffects={activeEffects}
+              seekTo={currentTime}
             />
             <Timeline 
               duration={videoMetadata?.duration || 0}
