@@ -4,16 +4,38 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Upload, Video, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { VideoMetadata } from "@/pages/Index";
 
 interface VideoUploadProps {
-  onVideoUpload: (file: File) => void;
+  onVideoUpload: (file: File, metadata: VideoMetadata) => void;
 }
 
 export const VideoUpload = ({ onVideoUpload }: VideoUploadProps) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  const getVideoMetadata = (file: File): Promise<VideoMetadata> => {
+    return new Promise((resolve) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      
+      video.onloadedmetadata = () => {
+        const metadata: VideoMetadata = {
+          duration: video.duration,
+          width: video.videoWidth,
+          height: video.videoHeight,
+          size: file.size,
+          format: file.type.split('/')[1].toUpperCase()
+        };
+        URL.revokeObjectURL(video.src);
+        resolve(metadata);
+      };
+      
+      video.src = URL.createObjectURL(file);
+    });
+  };
+
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     
     if (!file) return;
@@ -33,19 +55,27 @@ export const VideoUpload = ({ onVideoUpload }: VideoUploadProps) => {
     setIsUploading(true);
     setUploadProgress(0);
 
-    // Simulate upload progress
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsUploading(false);
-          onVideoUpload(file);
-          toast.success("Video uploaded successfully!");
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 200);
+    try {
+      // Get video metadata
+      const metadata = await getVideoMetadata(file);
+
+      // Simulate upload progress
+      const interval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            setIsUploading(false);
+            onVideoUpload(file, metadata);
+            toast.success("Video uploaded successfully!");
+            return 100;
+          }
+          return prev + 10;
+        });
+      }, 200);
+    } catch (error) {
+      setIsUploading(false);
+      toast.error("Failed to process video file");
+    }
   }, [onVideoUpload]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

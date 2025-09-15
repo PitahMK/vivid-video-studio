@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { VideoMetadata } from "@/pages/Index";
 import { 
   Download, 
   Settings, 
@@ -17,14 +18,17 @@ interface ControlPanelProps {
   onExport: () => void;
   isProcessing: boolean;
   hasVideo: boolean;
+  videoMetadata: VideoMetadata | null;
+  activeEffects: string[];
+  onToggleEffect: (effectName: string) => void;
 }
 
-export const ControlPanel = ({ onExport, isProcessing, hasVideo }: ControlPanelProps) => {
+export const ControlPanel = ({ onExport, isProcessing, hasVideo, videoMetadata, activeEffects, onToggleEffect }: ControlPanelProps) => {
   const effects = [
-    { name: "Fade In", icon: Zap, active: false },
-    { name: "Blur", icon: Filter, active: true },
-    { name: "Sepia", icon: Palette, active: false },
-    { name: "B&W", icon: Filter, active: false },
+    { name: "Fade In", icon: Zap },
+    { name: "Blur", icon: Filter },
+    { name: "Sepia", icon: Palette },
+    { name: "B&W", icon: Filter },
   ];
 
   return (
@@ -87,26 +91,30 @@ export const ControlPanel = ({ onExport, isProcessing, hasVideo }: ControlPanelP
           </h2>
           
           <div className="grid grid-cols-2 gap-2">
-            {effects.map((effect) => (
-              <Button
-                key={effect.name}
-                variant={effect.active ? "default" : "outline"}
-                size="sm"
-                className="justify-start relative"
-                disabled={!hasVideo}
-              >
-                <effect.icon className="w-4 h-4 mr-2" />
-                <span className="text-xs">{effect.name}</span>
-                {effect.active && (
-                  <Badge 
-                    variant="secondary" 
-                    className="absolute -top-1 -right-1 h-4 px-1 text-xs"
-                  >
-                    ✓
-                  </Badge>
-                )}
-              </Button>
-            ))}
+            {effects.map((effect) => {
+              const isActive = activeEffects.includes(effect.name);
+              return (
+                <Button
+                  key={effect.name}
+                  variant={isActive ? "default" : "outline"}
+                  size="sm"
+                  className="justify-start relative"
+                  disabled={!hasVideo}
+                  onClick={() => onToggleEffect(effect.name)}
+                >
+                  <effect.icon className="w-4 h-4 mr-2" />
+                  <span className="text-xs">{effect.name}</span>
+                  {isActive && (
+                    <Badge 
+                      variant="secondary" 
+                      className="absolute -top-1 -right-1 h-4 px-1 text-xs"
+                    >
+                      ✓
+                    </Badge>
+                  )}
+                </Button>
+              );
+            })}
           </div>
         </div>
       </Card>
@@ -156,15 +164,31 @@ export const ControlPanel = ({ onExport, isProcessing, hasVideo }: ControlPanelP
         <div className="text-xs text-muted-foreground space-y-1">
           <div className="flex justify-between">
             <span>Resolution:</span>
-            <span>{hasVideo ? "1920×1080" : "—"}</span>
+            <span>
+              {videoMetadata ? `${videoMetadata.width}×${videoMetadata.height}` : "—"}
+            </span>
           </div>
           <div className="flex justify-between">
             <span>Duration:</span>
-            <span>{hasVideo ? "0:00" : "—"}</span>
+            <span>
+              {videoMetadata ? 
+                `${Math.floor(videoMetadata.duration / 60)}:${Math.floor(videoMetadata.duration % 60).toString().padStart(2, '0')}` : 
+                "—"
+              }
+            </span>
           </div>
           <div className="flex justify-between">
             <span>Format:</span>
-            <span>{hasVideo ? "MP4" : "—"}</span>
+            <span>{videoMetadata?.format || "—"}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Size:</span>
+            <span>
+              {videoMetadata ? 
+                `${(videoMetadata.size / (1024 * 1024)).toFixed(1)} MB` : 
+                "—"
+              }
+            </span>
           </div>
         </div>
       </Card>

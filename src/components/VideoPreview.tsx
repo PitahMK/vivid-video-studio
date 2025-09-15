@@ -5,9 +5,11 @@ import { Play, Pause, Volume2, Maximize, RotateCcw } from "lucide-react";
 
 interface VideoPreviewProps {
   video: File | null;
+  onTimeUpdate?: (time: number) => void;
+  activeEffects?: string[];
 }
 
-export const VideoPreview = ({ video }: VideoPreviewProps) => {
+export const VideoPreview = ({ video, onTimeUpdate, activeEffects = [] }: VideoPreviewProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -38,7 +40,9 @@ export const VideoPreview = ({ video }: VideoPreviewProps) => {
 
   const handleTimeUpdate = () => {
     if (!videoRef.current) return;
-    setCurrentTime(videoRef.current.currentTime);
+    const time = videoRef.current.currentTime;
+    setCurrentTime(time);
+    onTimeUpdate?.(time);
   };
 
   const handleLoadedMetadata = () => {
@@ -59,6 +63,22 @@ export const VideoPreview = ({ video }: VideoPreviewProps) => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  const getVideoStyle = () => {
+    let style = "w-full h-full object-contain rounded-lg";
+    
+    if (activeEffects.includes("Blur")) {
+      style += " blur-sm";
+    }
+    if (activeEffects.includes("Sepia")) {
+      style += " sepia";
+    }
+    if (activeEffects.includes("B&W")) {
+      style += " grayscale";
+    }
+    
+    return style;
+  };
+
   return (
     <Card className="p-6 card-shadow h-full">
       <div className="space-y-4 h-full">
@@ -73,7 +93,7 @@ export const VideoPreview = ({ video }: VideoPreviewProps) => {
               <video
                 ref={videoRef}
                 src={videoUrl}
-                className="w-full h-full object-contain rounded-lg"
+                className={getVideoStyle()}
                 onTimeUpdate={handleTimeUpdate}
                 onLoadedMetadata={handleLoadedMetadata}
                 onEnded={() => setIsPlaying(false)}

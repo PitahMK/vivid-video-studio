@@ -2,7 +2,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Scissors, Volume2, Wand2, Layers } from "lucide-react";
 
-export const Timeline = () => {
+interface TimelineProps {
+  duration: number;
+  currentTime: number;
+  onSeek: (time: number) => void;
+}
+
+export const Timeline = ({ duration, currentTime, onSeek }: TimelineProps) => {
   return (
     <Card className="p-6 card-shadow">
       <div className="space-y-4">
@@ -33,11 +39,26 @@ export const Timeline = () => {
           <div className="space-y-3">
             {/* Time Ruler */}
             <div className="flex items-center justify-between text-xs text-timeline-foreground mb-4">
-              <span>00:00</span>
-              <span>00:15</span>
-              <span>00:30</span>
-              <span>00:45</span>
-              <span>01:00</span>
+              {duration > 0 ? (
+                Array.from({ length: 6 }, (_, i) => {
+                  const time = (duration / 5) * i;
+                  const minutes = Math.floor(time / 60);
+                  const seconds = Math.floor(time % 60);
+                  return (
+                    <span key={i}>
+                      {minutes.toString().padStart(2, '0')}:{seconds.toString().padStart(2, '0')}
+                    </span>
+                  );
+                })
+              ) : (
+                <>
+                  <span>00:00</span>
+                  <span>--:--</span>
+                  <span>--:--</span>
+                  <span>--:--</span>
+                  <span>--:--</span>
+                </>
+              )}
             </div>
             
             {/* Video Track */}
@@ -49,7 +70,20 @@ export const Timeline = () => {
                     <div className="text-xs text-foreground font-medium">Video Track</div>
                   </div>
                   {/* Playhead */}
-                  <div className="absolute top-0 left-1/3 w-0.5 h-full bg-primary"></div>
+                  <div 
+                    className="absolute top-0 w-0.5 h-full bg-primary cursor-pointer z-10"
+                    style={{ left: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%' }}
+                    onClick={(e) => {
+                      if (duration > 0) {
+                        const rect = e.currentTarget.parentElement?.getBoundingClientRect();
+                        if (rect) {
+                          const clickX = e.clientX - rect.left;
+                          const newTime = (clickX / rect.width) * duration;
+                          onSeek(Math.max(0, Math.min(duration, newTime)));
+                        }
+                      }
+                    }}
+                  ></div>
                 </div>
               </div>
               
@@ -69,7 +103,10 @@ export const Timeline = () => {
                     </div>
                   </div>
                   {/* Playhead */}
-                  <div className="absolute top-0 left-1/3 w-0.5 h-full bg-primary"></div>
+                  <div 
+                    className="absolute top-0 w-0.5 h-full bg-primary cursor-pointer z-10"
+                    style={{ left: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%' }}
+                  ></div>
                 </div>
               </div>
             </div>
@@ -87,7 +124,7 @@ export const Timeline = () => {
           </div>
           
           <div className="flex items-center space-x-2">
-            <span>Duration: 0:00</span>
+            <span>Duration: {duration > 0 ? `${Math.floor(duration / 60)}:${Math.floor(duration % 60).toString().padStart(2, '0')}` : '--:--'}</span>
           </div>
         </div>
       </div>
